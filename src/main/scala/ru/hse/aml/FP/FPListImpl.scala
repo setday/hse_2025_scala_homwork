@@ -1,6 +1,7 @@
 package ru.hse.aml.FP
 
-given FPListImpl: FPList[FList] with
+class FPListImpl extends FPList[FList], Forable[FList], Monad[FList]:
+
     extension [A](xs: FList[A]) override def at(idx: Int): Option[A] = {
         if (idx < 0) None
         else if (idx == 0) xs match {
@@ -41,3 +42,31 @@ given FPListImpl: FPList[FList] with
         case FList.Empty => false
         case FList.Cons(x, tail) => p(x) || tail.any(p)
     }
+
+    extension [A](xs : FList[A]) override def map[B](f : A => B) : FList[B] = xs match {
+        case FList.Empty => FList.Empty
+        case FList.Cons(x, tail) => FList.Cons(f(x), tail.map(f))
+    }
+
+    extension [A](xs : FList[A]) override def foreach(f : A => Unit) : Unit = xs match {
+        case FList.Empty => ()
+        case FList.Cons(x, tail) => f(x); tail.foreach(f)
+    }
+
+    override def pure[A](x: A): FList[A] = FList.Cons(x, FList.Empty)
+
+    // Extra method to make flatMap work more elegant way
+    extension [A](m: FList[A]) def |(n: FList[A]): FList[A] = m match {
+        case FList.Empty => n
+        case FList.Cons(x, tail) => FList.Cons(x, tail | n)
+    }
+
+    extension [A](m: FList[A]) override def flatMap[B](k: A => FList[B]): FList[B] = m match {
+        case FList.Empty => FList.Empty
+        case FList.Cons(x, tail) => k(x) match {
+            case FList.Empty => tail.flatMap(k)
+            case FList.Cons(y, ys) => FList.Cons(y, ys | tail.flatMap(k))
+        }
+    }
+
+given FPListImplExtension: FPListImpl()

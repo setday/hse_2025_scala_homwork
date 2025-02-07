@@ -11,4 +11,6 @@ trait Monad[F[_]] extends Functor[F]:
     def flatMap[B](k : A => F[B]) : F [B]
     def >>=[B](k: A => F[B]) : F[B] = m.flatMap(k)
 
-trait Forable[F[_]]
+trait Forable[F[_]] extends Functor[F]:
+  extension [A](xs : F[A])
+    def foreach(f : A => Unit) : Unit
